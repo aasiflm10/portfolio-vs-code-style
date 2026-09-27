@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  @apply bg-vsbg text-vstext font-mono;
+  font-size: 14px;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #4a4a4a; border-radius: 5px; }
+
+/* syntax-highlight spans used inside file content (see src/data/content.js) */
+@layer utilities {
+  .kw   { @apply text-vskw; }
+  .str  { @apply text-vsstr; }
+  .fn   { @apply text-vsfn; }
+  .prop { @apply text-vsprop; }
+  .num  { @apply text-vsnum; }
+  .type { @apply text-vstype; }
+  .cm   { @apply text-vscomment; }
+  .pu   { @apply text-vstext; }
+}
+
+.file-name { @apply text-vstype text-2xl font-bold mb-0.5; }
+.file-role { @apply text-vsfn mb-3.5 block; }
