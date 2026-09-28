@@ -1,46 +1,90 @@
+import { useState } from 'react'
 import { sidebarTree } from '../data/content.js'
 
-export default function Sidebar({ activeKey, onOpen, show }) {
+// File-type icon colors matching the reference screenshots
+function FileIcon({ color }) {
   return (
-    <div
-      className={`
-        bg-vssidebar border-r border-vsborder overflow-y-auto w-[230px] flex-shrink-0
-        fixed sm:static top-[34px] sm:top-0 bottom-6 sm:bottom-auto left-0 z-10
-        transition-[margin-left] duration-150
-        ${show ? 'ml-0' : '-ml-[230px] sm:ml-0'}
-      `}
-      style={{ boxShadow: show ? '2px 0 10px rgba(0,0,0,.4)' : 'none' }}
-    >
-      <h4 className="text-vsmuted font-ui text-[11px] tracking-wide font-semibold px-3.5 pt-2.5 pb-1.5">
+    <span
+      className="inline-block w-3 h-3 flex-shrink-0 rounded-[2px]"
+      style={{ background: color }}
+    />
+  )
+}
+
+function FolderIcon({ open }) {
+  return (
+    <span className="text-[#dcb67a] text-[11px] mr-0.5">
+      {open ? '▾' : '▸'}
+    </span>
+  )
+}
+
+export default function Sidebar({ activeKey, onOpen, folderState, setFolderState }) {
+  function toggleFolder(key) {
+    setFolderState(prev => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  // Build a nested-aware list: items under a closed folder are hidden
+  let insideProjects = false
+
+  return (
+    <div className="h-full overflow-y-auto select-none" style={{ background: 'var(--vs-sidebar)' }}>
+      {/* Section header */}
+      <div
+        className="px-3 pt-2 pb-1 text-[11px] font-semibold tracking-widest flex items-center gap-1 cursor-pointer"
+        style={{ color: 'var(--vs-muted)', fontFamily: 'Inter, sans-serif' }}
+        onClick={() => toggleFolder('root')}
+      >
+        <FolderIcon open={folderState.root !== false} />
         PORTFOLIO
-      </h4>
-      <div className="pb-3">
-        {sidebarTree.map((item, i) =>
-          item.type === 'folder' ? (
-            <div key={i} className="px-2.5 py-0.5 text-[#cccccc] text-[13px]">
-              <span className="inline-block w-3">▾</span>
-              {item.label}
-            </div>
-          ) : (
-            <div
-              key={item.key}
-              onClick={() => onOpen(item.key)}
-              className={`
-                py-0.5 pr-3.5 text-[13px] text-[#cccccc] cursor-pointer whitespace-nowrap
-                hover:bg-vshover
-                ${activeKey === item.key ? 'bg-vssel' : ''}
-              `}
-              style={{ paddingLeft: `${item.indent * 14 + 8}px` }}
-            >
-              <span
-                className="inline-block w-2 h-2 mr-2 rounded-[1px]"
-                style={{ background: item.color }}
-              />
-              {item.label}
-            </div>
-          )
-        )}
       </div>
+
+      {folderState.root !== false && (
+        <div className="pb-3">
+          {sidebarTree.map((item, i) => {
+            if (item.type === 'folder') {
+              const isOpen = folderState[item.key] !== false
+              if (item.key === 'projects') insideProjects = true
+              return (
+                <div
+                  key={i}
+                  className="flex items-center gap-1 py-0.5 px-2.5 cursor-pointer text-[13px]"
+                  style={{ color: 'var(--vs-text)', paddingLeft: '8px' }}
+                  onClick={() => toggleFolder(item.key)}
+                >
+                  <FolderIcon open={isOpen} />
+                  <span>{item.label}</span>
+                </div>
+              )
+            }
+
+            // Hide files inside collapsed 'projects' folder
+            if (item.indent === 2 && folderState.projects === false) return null
+
+            const isActive = item.key === activeKey
+            return (
+              <div
+                key={item.key}
+                onClick={() => onOpen(item.key)}
+                className="flex items-center gap-2 py-0.5 pr-4 text-[13px] cursor-pointer whitespace-nowrap transition-colors"
+                style={{
+                  paddingLeft: `${item.indent * 14 + 4}px`,
+                  color: 'var(--vs-text)',
+                  background: isActive ? 'var(--vs-sel)' : 'transparent',
+                }}
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--vs-hover)' }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
+              >
+                <FileIcon color={item.color} />
+                <span style={{ color: isActive ? 'var(--vs-text)' : 'var(--vs-text)', opacity: isActive ? 1 : 0.85 }}>
+                  {item.label}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
+
